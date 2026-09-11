@@ -1,0 +1,41 @@
+# --- Compilacion ---
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# --- Secretos y credenciales (nunca deben llegar al repositorio) ---
+# Llaves SSH del Learner Lab
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Variables de entorno con contrasenas reales
+.env
+.env.*
+!.env.example
+
+# Credenciales de AWS
+credentials
+aws-credentials*
+.aws/
+
+# Configuracion local de Spring con datos reales
+src/main/resources/application-local.yml
+application-local.yml
+
+# Logs
+*.log
+logs/
+
+# Configuracion local con credenciales reales (fuera del jar)
+config/

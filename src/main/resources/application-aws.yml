@@ -1,0 +1,25 @@
+# Perfil para el despliegue en EC2 detras de AWS API Gateway.
+# Se activa con: java -jar app.jar --spring.profiles.active=aws
+
+spring:
+  datasource:
+    # Endpoint de la instancia RDS. Se inyecta como variable de entorno
+    # desde el servicio systemd (ver despliegue/pedidos.service).
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+# CORS vacio a proposito: lo maneja AWS API Gateway.
+# Si ambos agregan cabeceras, el navegador bloquea la respuesta.
+cors:
+  allowed-origins: ${CORS_ORIGINS:}
+
+logging:
+  level:
+    org.springframework.security: INFO
+  file:
+    name: /var/log/pedidos-service/aplicacion.log

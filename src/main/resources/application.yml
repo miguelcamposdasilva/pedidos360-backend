@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: pedidos-service
+
+  datasource:
+    # Local: docker compose up -d  ->  postgres en localhost:5432
+    # EC2 / RDS: se sobreescribe con variables de entorno DB_URL, DB_USER, DB_PASSWORD
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/pedidos360}
+    username: ${DB_USER:pedidos}
+    password: ${DB_PASSWORD:pedidos}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # 'update' es comodo para la entrega; en produccion real seria 'validate' + Flyway
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+# --- Microsoft Entra ID -------------------------------------------------
+entra:
+  tenant-id: ${ENTRA_TENANT_ID:320402ca-6827-4630-8167-c2bf3d2a6991}
+  api-client-id: ${ENTRA_API_CLIENT_ID:323d4ae1-4cd7-4f3b-a10d-6cecd530b09d}
+
+  # Issuer v2.0. Requiere que la app registration de la API tenga
+  # "accessTokenAcceptedVersion": 2 en su manifiesto.
+  issuer-uri: https://login.microsoftonline.com/${entra.tenant-id}/v2.0
+
+  # Entra emite 'aud' como el clientId (tokens v2) o como el App ID URI (v1).
+  audiences: ${entra.api-client-id},api://${entra.api-client-id}
+
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    org.springframework.security: INFO
