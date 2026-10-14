@@ -35,4 +35,17 @@ public class ManejadorDeErrores {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cuerpo);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> argumentoInvalido(
+            IllegalArgumentException excepcion) {
+
+        Map<String, Object> cuerpo = Map.of(
+                "timestamp", Instant.now().toString(),
+                "status", 400,
+                "error", "Bad Request",
+                "mensaje", excepcion.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cuerpo);
+    }
 }
