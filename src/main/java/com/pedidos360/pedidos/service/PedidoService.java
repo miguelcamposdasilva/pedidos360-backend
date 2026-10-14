@@ -69,6 +69,32 @@ public class PedidoService {
         this.pedidoRepository.deleteById(id);
     }
 
+    /**
+     * Procesa un evento de pedido recibido asincronamente desde RabbitMQ.
+     * Mantiene las reglas de negocio encapsuladas en la capa de servicio,
+     * completamente separadas de la infraestructura de mensajeria.
+     *
+     * @param evento datos del evento recibido
+     */
+    @Transactional
+    public void procesarEvento(com.pedidos360.pedidos.dto.PedidoEvento evento) {
+
+        if (evento == null) {
+            throw new IllegalArgumentException("El evento de pedido no puede ser nulo");
+        }
+
+        // Si referencia un pedido existente, se valida en base de datos.
+        // Si no existe, lanzara ResponseStatusException (NOT_FOUND) provocando el NACK hacia la DLQ.
+        if (evento.idPedido() != null) {
+            Pedido pedido = this.obtener(evento.idPedido());
+
+            if (evento.estado() != null) {
+                pedido.setEstado(evento.estado());
+                this.pedidoRepository.save(pedido);
+            }
+        }
+    }
+
     private ResponseStatusException noEncontrado(Long id) {
         return new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
