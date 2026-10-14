@@ -22,6 +22,13 @@ spring:
         format_sql: true
     open-in-view: false
 
+  # --- RabbitMQ (conexión) ------------------------------------------------
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
 # --- Microsoft Entra ID -------------------------------------------------
 entra:
   tenant-id: ${ENTRA_TENANT_ID:320402ca-6827-4630-8167-c2bf3d2a6991}
@@ -49,3 +56,19 @@ management:
 logging:
   level:
     org.springframework.security: INFO
+
+# --- RabbitMQ (topología centralizada) ------------------------------------
+# Toda clase que necesite un nombre debe inyectar RabbitMQProperties;
+# NUNCA usar strings hardcodeados.
+app:
+  rabbitmq:
+    # Cola principal de notificaciones de pedidos
+    queue: pedidos.notificaciones
+    exchange: pedidos.exchange
+    routing-key: pedidos.routing.notificaciones
+
+    # Dead Letter Queue / Exchange para mensajes rechazados o fallidos
+    dlq:
+      queue: pedidos.notificaciones.dlq
+      exchange: pedidos.dlx
+      routing-key: pedidos.routing.notificaciones.dlq
