@@ -2,13 +2,18 @@ package com.pedidos360.pedidos.service;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.pedidos360.pedidos.dto.PedidoEvento;
 import com.pedidos360.pedidos.dto.PedidoRequest;
+import com.pedidos360.pedidos.model.EstadoPedido;
 import com.pedidos360.pedidos.model.Pedido;
+import com.pedidos360.pedidos.producer.pedido.PedidoProducer;
 import com.pedidos360.pedidos.repository.PedidoRepository;
 
 /**
@@ -23,10 +28,14 @@ import com.pedidos360.pedidos.repository.PedidoRepository;
 @Transactional(readOnly = true)
 public class PedidoService {
 
-    private final PedidoRepository pedidoRepository;
+    private static final Logger log = LoggerFactory.getLogger(PedidoService.class);
 
-    public PedidoService(PedidoRepository pedidoRepository) {
+    private final PedidoRepository pedidoRepository;
+    private final PedidoProducer pedidoProducer;
+
+    public PedidoService(PedidoRepository pedidoRepository, PedidoProducer pedidoProducer) {
         this.pedidoRepository = pedidoRepository;
+        this.pedidoProducer = pedidoProducer;
     }
 
     public List<Pedido> listar() {
@@ -56,7 +65,12 @@ public class PedidoService {
         pedido.setMonto(solicitud.monto());
         pedido.setCreadoPor(creadoPor);
 
-        return this.pedidoRepository.save(pedido);
+        Pedido guardado = this.pedidoRepository.save(pedido);
+
+        // Emite el evento asincrono hacia RabbitMQ sin alterar el retorno ni el contrato HTTP
+        this.pedidoProducer.publicarEvento(PedidoEvento.de(guardado, "PEDIDO_CREADO"));
+
+        return guardado;
     }
 
     @Transactional
@@ -77,21 +91,29 @@ public class PedidoService {
      * @param evento datos del evento recibido
      */
     @Transactional
-    public void procesarEvento(com.pedidos360.pedidos.dto.PedidoEvento evento) {
+    public void procesarEvento(PedidoEvento evento) {
 
         if (evento == null) {
             throw new IllegalArgumentException("El evento de pedido no puede ser nulo");
         }
+
+        log.info("Procesando evento asincrono RabbitMQ para pedido ID: {}, tipo: {}",
+                evento.idPedido(), evento.tipoEvento());
 
         // Si referencia un pedido existente, se valida en base de datos.
         // Si no existe, lanzara ResponseStatusException (NOT_FOUND) provocando el NACK hacia la DLQ.
         if (evento.idPedido() != null) {
             Pedido pedido = this.obtener(evento.idPedido());
 
-            if (evento.estado() != null) {
-                pedido.setEstado(evento.estado());
-                this.pedidoRepository.save(pedido);
-            }
+            // Simulacion de generacion de ticket/comprobante digital para la entrega
+            log.info("[TICKET EMITIDO] Comprobante electronico #TK-{} emitido para cliente '{}'. Monto: ${}. Transicionando estado a PREPARANDO",
+                    pedido.getId(), pedido.getCliente(), pedido.getMonto());
+
+            // Actualiza el estado a PREPARANDO tras la emision del ticket
+            pedido.setEstado(EstadoPedido.PREPARANDO);
+            this.pedidoRepository.save(pedido);
+
+            log.info("Pedido ID {} actualizado a estado: {}", pedido.getId(), pedido.getEstado());
         }
     }
 
