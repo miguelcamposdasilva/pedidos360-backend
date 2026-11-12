@@ -44,7 +44,7 @@ public class PedidoAuditoriaConsumer {
     @KafkaListener(
             topics           = "${app.kafka.topico-auditoria}",
             groupId          = "pedidos-group-audit",
-            containerFactory = "kafkaListenerContainerFactory"
+            containerFactory = "pedidoAuditoriaListenerFactory"
     )
     public void consumir(
             PedidoAuditoriaDto auditoria,

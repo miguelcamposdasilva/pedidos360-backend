@@ -44,7 +44,7 @@ public class PedidoEventosConsumer {
     @KafkaListener(
             topics           = "${app.kafka.topico-pedidos}",
             groupId          = "${spring.kafka.consumer.group-id}",
-            containerFactory = "kafkaListenerContainerFactory"
+            containerFactory = "pedidoEventoListenerFactory"
     )
     public void consumir(
             PedidoEventoDto evento,
