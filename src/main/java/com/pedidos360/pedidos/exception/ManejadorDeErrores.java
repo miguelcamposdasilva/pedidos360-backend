@@ -89,7 +89,7 @@ public class ManejadorDeErrores {
     }
 
     // -------------------------------------------------------------------------
-    // RuntimeException de broker Kafka → 503 Service Unavailable
+    // RuntimeException de broker (Kafka / RabbitMQ) → 503 Service Unavailable
     // -------------------------------------------------------------------------
 
     @ExceptionHandler(RuntimeException.class)
@@ -99,10 +99,9 @@ public class ManejadorDeErrores {
                 "timestamp", Instant.now().toString(),
                 "status",    503,
                 "error",     "Service Unavailable",
-                "mensaje",   "Error al comunicarse con el broker Kafka: "
+                "mensaje",   "Error al comunicarse con el broker de mensajería: "
                         + excepcion.getMessage());
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(cuerpo);
     }
 }
-

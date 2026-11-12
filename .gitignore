@@ -37,5 +37,5 @@ application-local.yml
 *.log
 logs/
 
-# Configuracion local con credenciales reales (fuera del jar)
-config/
+# Configuracion local con credenciales reales (fuera del jar, solo la raiz)
+/config/

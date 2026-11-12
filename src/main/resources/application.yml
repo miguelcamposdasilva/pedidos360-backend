@@ -39,6 +39,16 @@ spring:
         spring.json.trusted.packages: "*"
         spring.json.use.type.headers: true
 
+  # --- RabbitMQ ---------------------------------------------------------------
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        acknowledge-mode: manual
+
 # --- Microsoft Entra ID -------------------------------------------------
 entra:
   tenant-id: ${ENTRA_TENANT_ID:320402ca-6827-4630-8167-c2bf3d2a6991}
@@ -67,8 +77,23 @@ logging:
   level:
     org.springframework.security: INFO
 
-# --- Tópicos personalizados -------------------------------------------------
+# --- Tópicos Kafka personalizados -------------------------------------------
 app:
   kafka:
     topico-pedidos: pedidos.eventos
     topico-auditoria: pedidos.auditoria
+
+  # --- RabbitMQ (topología centralizada) ------------------------------------
+  # Toda clase que necesite un nombre debe inyectar RabbitMQProperties;
+  # NUNCA usar strings hardcodeados.
+  rabbitmq:
+    # Cola principal de notificaciones de pedidos
+    queue: pedidos.notificaciones
+    exchange: pedidos.exchange
+    routing-key: pedidos.routing.notificaciones
+
+    # Dead Letter Queue / Exchange para mensajes rechazados o fallidos
+    dlq:
+      queue: pedidos.notificaciones.dlq
+      exchange: pedidos.dlx
+      routing-key: pedidos.routing.notificaciones.dlq
