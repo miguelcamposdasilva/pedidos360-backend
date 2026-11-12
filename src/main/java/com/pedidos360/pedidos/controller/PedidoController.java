@@ -63,9 +63,11 @@ public class PedidoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        this.pedidoService.eliminar(id);
+        this.pedidoService.eliminar(id, this.correoDelToken(jwt));
 
         return ResponseEntity.noContent().build();
     }
