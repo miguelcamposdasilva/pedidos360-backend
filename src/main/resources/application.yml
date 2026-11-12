@@ -49,3 +49,18 @@ management:
 logging:
   level:
     org.springframework.security: INFO
+
+# --- Apache Kafka -----------------------------------------------------------
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: pedidos-group-analytics
+      auto-offset-reset: earliest
+
+app:
+  kafka:
+    topico-pedidos: pedidos.eventos
+    topico-auditoria: pedidos.auditoria
