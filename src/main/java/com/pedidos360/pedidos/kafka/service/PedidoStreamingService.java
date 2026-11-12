@@ -29,6 +29,13 @@ public class PedidoStreamingService {
      * @param evento DTO deserializado con los datos del evento
      */
     public void procesarEventoPedido(PedidoEventoDto evento) {
+        // Validación defensiva: el consumer ya valida, esta capa también protege
+        // en caso de invocación directa (tests de integración, etc.)
+        if (evento == null || evento.pedidoId() == null || evento.pedidoId() <= 0) {
+            throw new IllegalArgumentException(
+                    "[Streaming][EVENTO] Payload inválido o pedidoId nulo/negativo: " + evento);
+        }
+
         log.info("[Streaming][EVENTO] tipo='{}' pedidoId={} cliente='{}' monto={} estado='{}' creadoPor='{}'",
                 evento.tipoEvento(),
                 evento.pedidoId(),
@@ -37,8 +44,7 @@ public class PedidoStreamingService {
                 evento.estado(),
                 evento.creadoPor());
 
-        // Punto de extensión: aquí se puede agregar lógica analítica,
-        // actualización de proyecciones, notificaciones, etc.
+        // Punto de extensión: lógica analítica, proyecciones CQRS, notificaciones, etc.
         switch (evento.tipoEvento()) {
             case "CREADO"    -> log.debug("[Streaming] Nuevo pedido registrado en el pipeline analítico: id={}", evento.pedidoId());
             case "ELIMINADO" -> log.debug("[Streaming] Pedido eliminado del pipeline analítico: id={}", evento.pedidoId());
@@ -52,6 +58,13 @@ public class PedidoStreamingService {
      * @param auditoria DTO deserializado con los datos de auditoría
      */
     public void procesarAuditoria(PedidoAuditoriaDto auditoria) {
+        // Validación defensiva: el consumer ya valida, esta capa también protege
+        // en caso de invocación directa (tests de integración, etc.)
+        if (auditoria == null || auditoria.pedidoId() == null || auditoria.pedidoId() <= 0) {
+            throw new IllegalArgumentException(
+                    "[Streaming][AUDITORIA] Payload inválido o pedidoId nulo/negativo: " + auditoria);
+        }
+
         log.info("[Streaming][AUDITORIA] accion='{}' pedidoId={} realizadoPor='{}' detalle='{}'",
                 auditoria.accion(),
                 auditoria.pedidoId(),
